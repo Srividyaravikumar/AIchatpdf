@@ -1,0 +1,119 @@
+/* Page + header (unchanged basics) */
+body {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #0b0c1a, #111633);
+  color: white;
+}
+.App { display: flex; flex-direction: column; min-height: 100vh; }
+.site-header { text-align: center; padding: 24px 0 8px; }
+.site-title { margin: 0 0 6px; font-size: clamp(1.6rem, 2vw + 1rem, 2.4rem); }
+.site-subtitle { margin: 0; opacity: 0.7; }
+
+/* Row under header, edge-to-edge */
+.content-row.fullwidth {
+  margin-top: 30px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  width: 100%;
+  padding: 0 28px 24px;    /* small inner padding; remove if you truly want 0 */
+  box-sizing: border-box;
+}
+.half { min-width: 0; }
+
+/* LEFT: plain section (no card) */
+.left-plain {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* align the visual height with the right card */
+  max-height: 72vh;
+}
+.left-plain .facts-stream {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* RIGHT: chat card with bottom input */
+.box.chat-card {
+  height: 72vh;                 /* set the total card height */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;             /* clip content to rounded corners */
+}
+
+/* Chat internals */
+.chat h2 { margin: 0 0 10px; }
+.chat-window {
+  flex: 1;                      /* fills available space between title and input */
+  min-height: 0;                /* enables proper scrolling */
+  overflow-y: auto;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+  padding: 10px;
+  margin-bottom: 100px;
+}
+.message { padding: 10px; margin: 6px 0; border-radius: 10px; }
+.message.user { background: #4f46e5; align-self: flex-end; }
+.message.ai { background: rgba(255,255,255,0.1); }
+
+/* Input bar pinned at bottom because it's the last flex child */
+.input-row {
+  display: flex;
+  gap: 10px;
+}
+.input-row input {
+  flex: 1; height: 40px; padding: 0 12px;
+  border: none; border-radius: 8px;
+  background: rgba(255,255,255,0.1); color: white;
+}
+.input-row button {
+  height: 40px; padding: 0 16px; border: none;
+  border-radius: 8px; color: white; background: #4f46e5; font-weight: 600;
+}
+.input-row button:hover { background: #6366f1; }
+
+/* Card look (used only by right side now) */
+.box {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.25);
+  padding: 20px;
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  .content-row.fullwidth { grid-template-columns: 1fr; gap: 16px; }
+  .box.chat-card, .left-plain { max-height: none; }
+  .chat-window, .facts-stream { max-height: 50vh; }
+}
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* pushes input row to bottom */
+  height: 100%;                   /* or set a fixed height if needed */
+}
+
+.chat-window {
+  flex: 1;                        /* takes up remaining vertical space */
+  overflow-y: auto;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 10px;
+}
+
+/* optional: make sure the box fits neatly */
+.box {
+  display: flex;
+  flex-direction: column;
+  height: 600px; /* adjust depending on your layout */
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}

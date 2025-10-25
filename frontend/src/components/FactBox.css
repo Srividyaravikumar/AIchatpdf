@@ -1,0 +1,47 @@
+.factbox {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.factbox-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-align: center;
+  color: #a5b4fc;  /* subtle lavender accent */
+  margin: 0 0 12px 0;
+}
+
+.facts-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.facts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fact-item {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 10px 12px;
+  line-height: 1.4;
+  font-size: 0.95rem;
+}
+
+.fact-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.factbox-msg {
+  margin-top: 10px;
+  font-size: 0.75rem;
+  opacity: 0.7;
+  text-align: center;
+}
