@@ -43,22 +43,13 @@
   filter: brightness(1.2);
 }
 
-.bubble {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 10px 14px;
-  border-radius: 12px;
-  font-size: 1.2rem;
-  max-width: 320px;
-  line-height: 1.4;
-  text-align: left; /* keep text readable */
-}
 .bubble-below {
   background: rgba(255, 255, 255, 0.1);
-  padding: 10px 14px;
+  padding: 5px 5px;
   border-radius: 12px;
-  font-size: 0.95rem;
+  font-size: 0.80rem;
   line-height: 1.4;
-  text-align: left; /* keep text readable */
+  text-align: center; /* keep text readable */
 }
 
 /* header */
@@ -87,3 +78,12 @@
 }
 
 
+.fact-item, .fact-card {
+  background: #ffffff;
+  color: #1e293b;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid #2563eb; /* Blue accent line */
+}

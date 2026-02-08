@@ -5,7 +5,7 @@
 }
 .site-title {
   margin: 0 0 6px 0;
-  font-size: clamp(1.4rem, 1.8vw + 1rem, 2rem);
+  font-size: 5rem;
   letter-spacing: 0.3px;
 }
 .site-subtitle {

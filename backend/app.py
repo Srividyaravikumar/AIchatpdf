@@ -1,9 +1,12 @@
 # backend/app.py
+from dotenv import load_dotenv
 from flask import Flask, request, jsonify, Response, stream_with_context
 from flask_cors import CORS
 from pathlib import Path
 import json, time, os
 from chat_cf_rag import ask as rag_ask, chat_stream as rag_stream  # new import
+from pathlib import Path
+load_dotenv(dotenv_path=Path(__file__).resolve().parents[1] / ".env")
 
 app = Flask(__name__)
 

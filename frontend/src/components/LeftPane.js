@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./LeftPane.css";
+import { API_BASE } from "../api";
 
-const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:8000";
 const FALLBACK_PUBLIC_URL = "/facts_gpt5.json";
 
 export default function LeftPane() {
@@ -18,13 +18,21 @@ export default function LeftPane() {
   useEffect(() => {
     (async () => {
       try {
-        const data = await fetchJson(`${API_BASE.replace(/\/$/, "")}/facts`);
-        const arr = Array.isArray(data) ? data : Array.isArray(data.facts) ? data.facts : [];
+        const data = await fetchJson(`${API_BASE}/facts`);
+        const arr = Array.isArray(data)
+          ? data
+          : Array.isArray(data.facts)
+          ? data.facts
+          : [];
         setFacts(arr.map(String));
       } catch {
         try {
           const data = await fetchJson(FALLBACK_PUBLIC_URL);
-          const arr = Array.isArray(data) ? data : Array.isArray(data.facts) ? data.facts : [];
+          const arr = Array.isArray(data)
+            ? data
+            : Array.isArray(data.facts)
+            ? data.facts
+            : [];
           setFacts(arr.map(String));
         } catch {
           setFacts([]);
@@ -40,7 +48,7 @@ export default function LeftPane() {
   useEffect(() => {
     if (!facts.length) return;
     const id = setInterval(() => {
-      setIdx(i => (i + 1) % facts.length);
+      setIdx((i) => (i + 1) % facts.length);
     }, 30000);
     return () => clearInterval(id);
   }, [facts.length]);
@@ -49,22 +57,24 @@ export default function LeftPane() {
 
   return (
     <div className="left-pane">
-      {/* avatar + speech bubble */}
-      <div className="hero">
-  <div className="avatar">
-    <div className="avatar-circle">
-      <img src="/woman.png" alt="Avatar" className="avatar-img" />
-    </div>
-  </div>
-  <div className="bubble">Hallo! 👋 </div>
-</div>
-      <div className="bubble-below">I’m your AI assistant powered by Retrieval-Augmented Generation (RAG).
-I can help you explore and understand Germany’s Fiscal Code, the country’s main tax law.
-No need to worry about translations, the original document was already published in English.
-Just ask me any question about Germany’s tax rules, and I’ll reply with the exact legal citation straight from the official document. This is not a legal advice. </div>
+
+      <div className="bubble-below">
+      Powered by Retrieval-Augmented Generation (RAG).
+      </div>
+      <div className="bubble-below">
+      Understand Germany’s Fiscal Code (main tax law).
+      </div>
+      <div className="bubble-below">
+      Document already in English, no translation needed.
+      </div>
+      <div className="bubble-below">
+      Replies include exact legal citations from the official text.
+      </div>
+      <div className="bubble-below">
+       Disclaimer: Not legal advice.
+      </div>
       <h2 className="panel-title">Did You Know?</h2>
 
-      {/* rotating single fact */}
       <div className="fact-rotator" aria-live="polite" aria-atomic="true">
         {!ready && <div className="placeholder">Loading…</div>}
         {ready && !current && <div className="placeholder">No facts available.</div>}

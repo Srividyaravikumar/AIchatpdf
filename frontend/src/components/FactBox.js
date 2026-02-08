@@ -1,8 +1,8 @@
 // frontend/src/components/FactBox.jsx
 import React, { useEffect, useState } from "react";
 import "./FactBox.css";
+import { API_BASE } from "../api";
 
-const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:8000";
 const FALLBACK_PUBLIC_URL = "/facts_gpt5.json";
 
 export default function FactBox() {
@@ -18,32 +18,37 @@ export default function FactBox() {
 
   useEffect(() => {
     (async () => {
+      setLoading(true);
       try {
-        const data = await fetchJson(`${API_BASE.replace(/\/$/, "")}/facts`);
-        const arr = Array.isArray(data) ? data :
-                    Array.isArray(data.facts) ? data.facts : [];
-        if (arr.length) {
-          setFacts(arr.map(String));
-          setMsg(`Loaded ${arr.length} facts from backend.`);
-        } else {
-          throw new Error("Backend returned empty facts array.");
-        }
+        // Try backend first
+        const data = await fetchJson(`${API_BASE}/facts`);
+        const arr = Array.isArray(data)
+          ? data
+          : Array.isArray(data.facts)
+          ? data.facts
+          : [];
+
+        if (!arr.length) throw new Error("Backend returned empty facts array.");
+
+        setFacts(arr.map(String));
+        setMsg(`Loaded ${arr.length} facts from backend.`);
       } catch {
+        // Fallback to public file
         try {
           const data = await fetchJson(FALLBACK_PUBLIC_URL);
-          const arr = Array.isArray(data) ? data :
-                      Array.isArray(data.facts) ? data.facts : [];
-          if (arr.length) {
-            setFacts(arr.map(String));
-            setMsg(`Loaded ${arr.length} facts from /public/facts_gpt5.json`);
-          } else {
-            throw new Error("Fallback file had no facts.");
-          }
+          const arr = Array.isArray(data)
+            ? data
+            : Array.isArray(data.facts)
+            ? data.facts
+            : [];
+
+          if (!arr.length) throw new Error("Fallback file had no facts.");
+
+          setFacts(arr.map(String));
+          setMsg(`Loaded ${arr.length} facts from /public/facts_gpt5.json`);
         } catch {
           setFacts([]);
           setMsg("Failed to load facts from backend and fallback.");
-        } finally {
-          setLoading(false);
         }
       } finally {
         setLoading(false);

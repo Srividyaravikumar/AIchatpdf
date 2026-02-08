@@ -1,39 +1,37 @@
 // src/App.js
 import React, { useEffect } from "react";
-import Header from "./components/Header";
 import LeftPane from "./components/LeftPane";
 import ChatBox from "./components/ChatBox";
 import "./App.css";
+import { API_BASE } from "./api";
 
 export default function App() {
-  useEffect(() => {
-    const base = process.env.REACT_APP_API_BASE;
-    console.log("API BASE =", base);
-    if (!base) {
-      console.error("REACT_APP_API_BASE is missing. Set it in Vercel env vars and redeploy.");
-      return;
-    }
-    fetch(`${base}/health`)
-      .then((r) => r.json())
-      .then((d) => console.log("Backend response:", d))
-      .catch((e) => console.error("Backend fetch error:", e));
-  }, []);
-
   return (
     <div className="App">
-      <Header />
-      <main className="content-row fullwidth">
-        <section className="half left-plain">
-          <div className="left-plain-inner">
-            <LeftPane />
-          </div>
-        </section>
-
-        <section className="half">
-          <div className="box chat-card">
+      {/* Sidebar Area */}
+      <aside className="left-plain">
+        <div className="sidebar-branding">
+          <h1 className="logo-text">Chat Smarter.ai</h1>
+          <div className="logo-subtext">An AI chat platform that explains German Fiscal code with grounded answers with exact § citations. </div>
+        </div>
+        <div className="left-plain-inner">
+          <LeftPane />
+        </div>
+      </aside>
+       
+      {/* Main Chat Area */}
+      <main className="chat-main-column">
+        {/* We removed the Header component from here as requested */}
+        <div className="hello"> Hello👋😊 </div>
+        <section className="chat-content">
+          <div className="box chat-card-wrapper">
             <ChatBox />
           </div>
         </section>
+
+        <footer className="footer-status">
+          <small>© {new Date().getFullYear()} Chat smarter.ai — Grounded Legal AI</small>
+        </footer>
       </main>
     </div>
   );

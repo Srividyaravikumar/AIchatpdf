@@ -1,119 +1,240 @@
-/* Page + header (unchanged basics) */
+/* src/App.css */
+:root {
+  --sidebar-bg: #1a1a1b;
+  --main-bg: #ffffff;
+  --primary-blue: #2563eb;
+  --text-main: #1e293b;
+  --border-color: #2d2d2e;
+}
+
 body {
   margin: 0;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #0b0c1a, #111633);
-  color: white;
+  background-color: var(--main-bg);
+  color: var(--text-main);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
-.App { display: flex; flex-direction: column; min-height: 100vh; }
-.site-header { text-align: center; padding: 24px 0 8px; }
-.site-title { margin: 0 0 6px; font-size: clamp(1.6rem, 2vw + 1rem, 2.4rem); }
-.site-subtitle { margin: 0; opacity: 0.7; }
 
-/* Row under header, edge-to-edge */
-.content-row.fullwidth {
-  margin-top: 30px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  width: 100%;
-  padding: 0 28px 24px;    /* small inner padding; remove if you truly want 0 */
-  box-sizing: border-box;
+.App {
+  display: flex; /* Sidebar and Main side-by-side */
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
 }
-.half { min-width: 0; }
-
-/* LEFT: plain section (no card) */
+.hello {
+  display: block;       /* Ensures it behaves like a block */
+  width: fit-content;   /* Shrinks the box to the size of the text */
+  margin: 0 auto;       /* Centers horizontally */
+  padding: 5px 5px;
+  border-radius: 12px;
+  font-size: 1.5rem;
+  line-height: 1.4;
+  text-align: center;
+}
+/* Sidebar Section */
 .left-plain {
+  width: 350px;
+  background-color: var(--sidebar-bg);
+  color: white;
+  padding: 30px 24px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  /* align the visual height with the right card */
-  max-height: 72vh;
+  overflow-y: auto;
+  border-right: 1px solid var(--border-color);
 }
-.left-plain .facts-stream {
+
+.logo-text {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  color: #ffffff;
+}
+.logo-subtext{
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size:0.8rem;
+  color: #ffffff;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+/* Main Chat Section */
+.chat-main-column {
   flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-}
-
-/* RIGHT: chat card with bottom input */
-.box.chat-card {
-  height: 72vh;                 /* set the total card height */
   display: flex;
   flex-direction: column;
-  overflow: hidden;             /* clip content to rounded corners */
-}
-
-/* Chat internals */
-.chat h2 { margin: 0 0 10px; }
-.chat-window {
-  flex: 1;                      /* fills available space between title and input */
-  min-height: 0;                /* enables proper scrolling */
+  background-color: #ffffff;
+  padding: 20px 60px;
   overflow-y: auto;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.03);
-  padding: 10px;
-  margin-bottom: 100px;
+  position: relative;
 }
-.message { padding: 10px; margin: 6px 0; border-radius: 10px; }
-.message.user { background: #4f46e5; align-self: flex-end; }
-.message.ai { background: rgba(255,255,255,0.1); }
 
-/* Input bar pinned at bottom because it's the last flex child */
-.input-row {
+.chat-content {
+  flex: 1;
   display: flex;
-  gap: 10px;
-}
-.input-row input {
-  flex: 1; height: 40px; padding: 0 12px;
-  border: none; border-radius: 8px;
-  background: rgba(255,255,255,0.1); color: white;
-}
-.input-row button {
-  height: 40px; padding: 0 16px; border: none;
-  border-radius: 8px; color: white; background: #4f46e5; font-weight: 600;
-}
-.input-row button:hover { background: #6366f1; }
-
-/* Card look (used only by right side now) */
-.box {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.25);
-  padding: 20px;
+  flex-direction: column;
 }
 
-/* Mobile */
-@media (max-width: 900px) {
-  .content-row.fullwidth { grid-template-columns: 1fr; gap: 16px; }
-  .box.chat-card, .left-plain { max-height: none; }
-  .chat-window, .facts-stream { max-height: 50vh; }
+/* Message Bubbles */
+.message.ai { 
+  background: #f1f5f9; 
+  color: var(--text-main); 
+  border-radius: 12px;
+  padding: 12px;
+  margin: 8px 0;
+  max-width: 85%;
+  align-self: flex-start;
 }
+
+.message.user { 
+  background: var(--primary-blue); 
+  color: white; 
+  align-self: flex-end;
+  border-radius: 12px;
+  padding: 12px;
+  margin: 8px 0;
+  max-width: 85%;
+}
+
+/* Reset old styles for the modern look */
+.box.chat-card-wrapper {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  height: 100%;
+}
+
+.footer-status {
+  padding: 10px 0;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+/* src/App.css */
+
+/* Container to handle positioning */
+.input-outer-wrapper {
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: white; /* Ensures messages don't bleed behind it */
+}
+
+/* The Pill-Shaped Bar */
+
+.ai-sparkle {
+  color: #2563eb;
+  margin-right: 12px;
+  font-size: 1.2rem;
+}
+
+.floating-input-bar input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  padding: 8px 0;
+  color: #1e293b;
+}
+
+/* The Circular Blue Send Button */
+.modern-send-btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+  margin-left: 10px;
+}
+
+.modern-send-btn:hover {
+  background: #1d4ed8;
+  transform: scale(1.05);
+}
+
+.loading-text {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 8px;
+  height: 1rem; /* Prevents layout jump */
+}
+/* src/App.css */
+
 .chat-container {
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* pushes input row to bottom */
-  height: 100%;                   /* or set a fixed height if needed */
+  height: 100%; /* Fill the whole chat-main-column */
+  justify-content: space-between;
 }
 
 .chat-window {
-  flex: 1;                        /* takes up remaining vertical space */
-  overflow-y: auto;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  background: rgba(255, 255, 255, 0.03);
-  padding: 10px;
-}
-
-/* optional: make sure the box fits neatly */
-.box {
+  flex-grow: 1; /* This tells the messages to take up all empty space */
+  overflow-y: auto; /* Adds scrollbar only to messages */
+  padding-bottom: 20px;
   display: flex;
   flex-direction: column;
-  height: 600px; /* adjust depending on your layout */
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.input-outer-wrapper {
+  flex-shrink: 0; /* Prevents the bar from getting squashed */
+  padding: 20px 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  background-color: #ffffff; /* Matches main background to hide messages scrolling behind */
+  border-top: 1px solid #f1f5f9; /* Optional subtle line */
+}
+
+.floating-input-bar {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 800px; /* Limits width for readability on large screens */
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 10px 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center; /* Centers the chips horizontally */
+  gap: 12px;               /* This provides clean, even space between chips */
+  margin-bottom: 16px;     /* Space between the chips and the input bar */
+  width: 100%;
+  max-width: 800px;
+}
+
+.suggestion-chip {
+  border: 1px solid #e2e8f0; /* Softer border color */
+  background: #ffffff;
+  border-radius: 999px;
+  padding: 8px 16px;         /* Slightly wider padding for a pill look */
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 300;
+  color: #475569;
+  transition: all 0.2s ease;
+  white-space: nowrap;       /* Prevents text inside chip from wrapping */
+}
+
+.suggestion-chip:hover:not(:disabled) {
+  background-color: #f8fafc;
+  border-color: #2563eb;
+  color: #2563eb;
+  transform: translateY(-1px); /* Subtle lift effect */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.suggestion-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: #ddd;
+}
 }
