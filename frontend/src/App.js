@@ -1,10 +1,7 @@
 // src/App.js
-import React, { useEffect } from "react";
 import LeftPane from "./components/LeftPane";
 import ChatBox from "./components/ChatBox";
 import "./App.css";
-import { API_BASE } from "./api";
-
 export default function App() {
   return (
     <div className="App">

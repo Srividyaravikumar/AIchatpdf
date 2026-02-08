@@ -115,9 +115,6 @@ export default function ChatBox() {
     }
   }
 
-  function stopStreaming() {
-    if (abortRef.current) abortRef.current.abort();
-  }
 
   // src/components/ChatBox.js return snippet
 // src/components/ChatBox.js (Snippet)
