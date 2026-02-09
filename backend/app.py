@@ -1,16 +1,15 @@
-# backend/app.py
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, Response, stream_with_context
 from flask_cors import CORS
 from pathlib import Path
 import json, time, os
-from chat_cf_rag import ask as rag_ask, chat_stream as rag_stream  # new import
-from pathlib import Path
-load_dotenv(dotenv_path=Path(__file__).resolve().parents[1] / ".env")
+
+from chat_cf_rag import ask as rag_ask, chat_stream as rag_stream
+
+load_dotenv()  # Railway uses environment variables; .env is optional locally
 
 app = Flask(__name__)
 
-# Allow Vercel + local dev
 APP_ORIGIN = os.getenv("APP_ORIGIN", "https://chatsmarter.vercel.app")
 ALLOWED = os.getenv(
     "ALLOWED_ORIGINS",
@@ -20,7 +19,7 @@ ALLOWED = os.getenv(
 CORS(
     app,
     resources={r"/*": {"origins": ALLOWED}},
-    supports_credentials=True,
+    supports_credentials=False,  # set True only if you use cookies
     methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
     max_age=86400,
@@ -28,11 +27,6 @@ CORS(
 
 BASE_DIR = Path(__file__).resolve().parent
 FACTS_GPT5_PATH = BASE_DIR / "facts_gpt5.json"
-
-# Preflight: reply fast so browser proceeds to real request
-@app.route("/<path:_any>", methods=["OPTIONS"])
-def options_ok(_any):
-    return ("", 204)
 
 @app.get("/health")
 def health():
@@ -67,30 +61,22 @@ def ask_stream():
         return jsonify({"error": "missing 'question'"}), 400
 
     def generate():
-        # Open the pipe fast so edges don’t think we’re idle
         yield "event: ping\ndata: open\n\n"
-
-        # Try model streaming first; fallback to non-stream + chunking
         try:
-            # rag_stream should yield small string chunks
             last_beat = time.time()
             for piece in rag_stream(q):
-                # heartbeat every ~9s to keep Cloudflare happy
                 now = time.time()
                 if now - last_beat > 9:
                     yield "event: ping\ndata: hb\n\n"
                     last_beat = now
                 if piece:
-                    payload = json.dumps({"delta": piece})
-                    yield f"data: {payload}\n\n"
+                    yield f"data: {json.dumps({'delta': piece})}\n\n"
             yield "event: done\ndata: end\n\n"
-        except Exception as e:
-            # fallback: one-shot call, then chunk it so the UI still streams
+        except Exception:
             try:
                 txt = rag_ask(q)
             except Exception as inner:
-                err = f"RAG failed: {inner}"
-                yield f"event: error\ndata: {json.dumps({'error': err})}\n\n"
+                yield f"event: error\ndata: {json.dumps({'error': f'RAG failed: {inner}'})}\n\n"
                 return
             for i in range(0, len(txt), 256):
                 yield f"data: {json.dumps({'delta': txt[i:i+256]})}\n\n"
@@ -104,7 +90,3 @@ def ask_stream():
         "X-Accel-Buffering": "no",
     }
     return Response(stream_with_context(generate()), headers=headers)
-
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", "8000"))  # Render sets PORT
-    app.run(host="0.0.0.0", port=port, debug=True)
