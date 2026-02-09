@@ -61,41 +61,51 @@ def ask_stream():
         return jsonify({"error": "missing 'question'"}), 400
 
     def generate():
-        yield "event: ping\ndata: open\n\n"
+        # First event so the client sees the stream is open
+        yield b"event: ping\ndata: open\n\n"
+
         try:
             last_beat = time.time()
+
             for piece in rag_stream(q):
                 now = time.time()
+
+                # heartbeat every ~9s to keep proxies happy
                 if now - last_beat > 9:
-                    yield "event: ping\ndata: hb\n\n"
+                    yield b"event: ping\ndata: hb\n\n"
                     last_beat = now
+
                 if piece:
-                    yield f"data: {json.dumps({'delta': piece})}\n\n"
-            yield "event: done\ndata: end\n\n"
+                    payload_bytes = json.dumps({"delta": piece}).encode("utf-8")
+                    yield b"data: " + payload_bytes + b"\n\n"
+
+            yield b"event: done\ndata: end\n\n"
+
         except Exception:
+            # fallback to non-stream answer
             try:
                 txt = rag_ask(q)
             except Exception as inner:
-                yield f"event: error\ndata: {json.dumps({'error': f'RAG failed: {inner}'})}\n\n"
+                err = json.dumps({"error": f"RAG failed: {inner}"}).encode("utf-8")
+                yield b"event: error\ndata: " + err + b"\n\n"
                 return
+
             for i in range(0, len(txt), 256):
-                yield f"data: {json.dumps({'delta': txt[i:i+256]})}\n\n"
+                payload_bytes = json.dumps({"delta": txt[i:i+256]}).encode("utf-8")
+                yield b"data: " + payload_bytes + b"\n\n"
                 time.sleep(0.02)
-            yield "event: done\ndata: end\n\n"
+
+            yield b"event: done\ndata: end\n\n"
 
     headers = {
-        "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache, no-transform",
         "Connection": "keep-alive",
         "X-Accel-Buffering": "no",
     }
+
     return Response(
-    stream_with_context(generate()),
-    headers=headers,
-    direct_passthrough=True
-)
-
-
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", "8000"))
-    app.run(host="0.0.0.0", port=port, debug=True)
+        stream_with_context(generate()),
+        mimetype="text/event-stream",
+        headers=headers,
+        direct_passthrough=True,
+    )
