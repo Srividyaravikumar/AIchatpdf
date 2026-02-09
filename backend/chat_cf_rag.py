@@ -3,12 +3,14 @@ import time
 from typing import Iterable, List, Optional, Any
 from pathlib import Path
 from dotenv import load_dotenv
+
 from qdrant_client import QdrantClient
 from fastembed import TextEmbedding
-
 from huggingface_hub import InferenceClient
 
+# Load .env locally if present (Railway uses Variables)
 load_dotenv(dotenv_path=Path(__file__).resolve().parents[1] / ".env")
+
 QURL = os.getenv("QDRANT_URL")
 QKEY = os.getenv("QDRANT_API_KEY")
 COLL = os.getenv("QDRANT_COLLECTION", "docs")
@@ -22,8 +24,12 @@ MAX_CTX_CHARS = int(os.getenv("RAG_MAX_CTX_CHARS", "6000"))
 TEMPERATURE = float(os.getenv("RAG_TEMPERATURE", "0.4"))
 MAX_NEW_TOKENS = int(os.getenv("RAG_MAX_NEW_TOKENS", "800"))
 
+# IMPORTANT: Keep the embedding model stable between indexing and querying
+EMBED_MODEL = os.getenv("EMBED_MODEL", "BAAI/bge-small-en-v1.5")
+
 _client: Optional[QdrantClient] = None
 _hf: Optional[InferenceClient] = None
+_embedder: Optional[TextEmbedding] = None
 
 
 def _require_env(name: str, value: Optional[str]) -> str:
@@ -41,8 +47,7 @@ def _init() -> None:
         _client = QdrantClient(url=qurl, api_key=qkey, timeout=60)
 
     if _embedder is None:
-        _embedder = TextEmbedding(model_name="BAAI/bge-small-en-v1.5")
-
+        _embedder = TextEmbedding(model_name=EMBED_MODEL)
 
     if _hf is None:
         _require_env("HF_API_KEY", HF_KEY)
@@ -53,7 +58,7 @@ def _trim_context(chunks: List[str], max_chars: int = MAX_CTX_CHARS) -> str:
     out: List[str] = []
     total = 0
     for c in chunks:
-        c = c.strip()
+        c = (c or "").strip()
         if not c:
             continue
         add = len(c) + 1
@@ -64,14 +69,26 @@ def _trim_context(chunks: List[str], max_chars: int = MAX_CTX_CHARS) -> str:
     return "\n".join(out)
 
 
+def _normalize(vec: List[float]) -> List[float]:
+    norm = (sum(x * x for x in vec) ** 0.5)
+    if not norm:
+        return vec
+    return [x / norm for x in vec]
+
+
 def _retrieve(query: str, top_k: int = TOP_K) -> List[str]:
     _init()
     assert _embedder is not None
     assert _client is not None
 
-    qvec = list(_embedder.embed([query]))[0]
-    qvec = (qvec / (sum(x*x for x in qvec) ** 0.5))  # normalize
-    qvec = qvec.tolist() if hasattr(qvec, "tolist") else list(qvec)
+    # FastEmbed returns an iterator of vectors (one per input text)
+    v = list(_embedder.embed([query]))[0]
+
+    # Convert to plain Python list[float]
+    qvec = v.tolist() if hasattr(v, "tolist") else list(v)
+
+    # Normalize for cosine similarity collections
+    qvec = _normalize(qvec)
 
     res = _client.query_points(collection_name=COLL, query=qvec, limit=top_k)
 
@@ -99,9 +116,6 @@ def _build_prompt(context: str, question: str) -> str:
 
 
 def _extract_chat_text(resp: Any) -> str:
-    """
-    Extract assistant message text from a chat_completion response.
-    """
     try:
         if resp and getattr(resp, "choices", None):
             msg = resp.choices[0].message
@@ -119,15 +133,15 @@ def ask(question: str) -> str:
     if not ctx_chunks:
         return "I don't know from the provided context."
 
-    context = "\n".join(ctx_chunks)
-
+    context = _trim_context(ctx_chunks, MAX_CTX_CHARS)
     if not context.strip():
         return "I don't know from the provided context."
 
     prompt = _build_prompt(context, question)
 
-    print("Retrieved chunks:", len(ctx_chunks))
-    print("Prompt length (chars):", len(prompt))
+    # Helpful local debug (safe to keep)
+    print("Retrieved chunks:", len(ctx_chunks), flush=True)
+    print("Prompt length (chars):", len(prompt), flush=True)
 
     resp = _hf.chat_completion(
         messages=[
@@ -143,18 +157,10 @@ def ask(question: str) -> str:
 
 
 def _extract_stream_delta(event: Any) -> str:
-    """
-    Best-effort extraction of incremental text from streamed chat events.
-    Providers differ in schema; this handles common variants.
-    """
-    # Sometimes it's already a string
     if isinstance(event, str):
         return event
 
-    # Dict-like events
     if isinstance(event, dict):
-        # Common shapes:
-        # {"choices":[{"delta":{"content":"..."}}]}
         try:
             choices = event.get("choices") or []
             if choices:
@@ -164,10 +170,8 @@ def _extract_stream_delta(event: Any) -> str:
                     return str(content)
         except Exception:
             pass
-        # Fallback keys
         return str(event.get("token") or event.get("text") or "")
 
-    # Object-like events
     try:
         choices = getattr(event, "choices", None)
         if choices:
@@ -183,10 +187,6 @@ def _extract_stream_delta(event: Any) -> str:
 
 
 def chat_stream(question: str) -> Iterable[str]:
-    """
-    Stream generated text using chat_completion(stream=True).
-    If streaming isn't supported by provider, fall back to non-stream answer.
-    """
     _init()
     assert _hf is not None
 
@@ -217,6 +217,5 @@ def chat_stream(question: str) -> Iterable[str]:
                 yield delta
             time.sleep(0.01)
     except Exception as e:
-        # If streaming isn't supported, fall back to one-shot
-        print("Streaming failed, falling back to ask():", repr(e))
+        print("Streaming failed, falling back to ask():", repr(e), flush=True)
         yield ask(question)

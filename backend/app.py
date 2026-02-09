@@ -90,3 +90,7 @@ def ask_stream():
         "X-Accel-Buffering": "no",
     }
     return Response(stream_with_context(generate()), headers=headers)
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", "8000"))
+    app.run(host="0.0.0.0", port=port, debug=True)
