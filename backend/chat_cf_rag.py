@@ -187,22 +187,44 @@ def _extract_stream_delta(event: Any) -> str:
 
 
 def chat_stream(question: str) -> Iterable[str]:
-    _init()
+    print("STREAM: started", flush=True)
+
+    try:
+        _init()
+        print("STREAM: init ok", flush=True)
+    except Exception as e:
+        print("STREAM: init failed:", repr(e), flush=True)
+        # yield something so SSE has content
+        yield "Init failed"
+        return
+
     assert _hf is not None
 
-    ctx_chunks = _retrieve(question, top_k=TOP_K)
+    try:
+        print("STREAM: retrieving...", flush=True)
+        ctx_chunks = _retrieve(question, top_k=TOP_K)
+        print("STREAM: chunks:", len(ctx_chunks), flush=True)
+    except Exception as e:
+        print("STREAM: retrieve failed:", repr(e), flush=True)
+        yield "Retrieve failed"
+        return
+
     if not ctx_chunks:
+        print("STREAM: no chunks returned", flush=True)
         yield "I don't know from the provided context."
         return
 
     context = _trim_context(ctx_chunks, MAX_CTX_CHARS)
     if not context.strip():
+        print("STREAM: empty trimmed context", flush=True)
         yield "I don't know from the provided context."
         return
 
     prompt = _build_prompt(context, question)
+    print("STREAM: prompt chars:", len(prompt), flush=True)
 
     try:
+        print("STREAM: calling HF stream...", flush=True)
         for event in _hf.chat_completion(
             messages=[
                 {"role": "system", "content": "You answer questions using only the provided context."},
@@ -214,8 +236,19 @@ def chat_stream(question: str) -> Iterable[str]:
         ):
             delta = _extract_stream_delta(event)
             if delta:
+                print("STREAM: delta:", repr(delta[:30]), flush=True)
                 yield delta
-            time.sleep(0.01)
+            # Optional: remove sleep while debugging
+            # time.sleep(0.01)
+
+        print("STREAM: HF stream ended", flush=True)
+
     except Exception as e:
-        print("Streaming failed, falling back to ask():", repr(e), flush=True)
-        yield ask(question)
+        print("STREAM: HF streaming failed, fallback to ask():", repr(e), flush=True)
+        try:
+            ans = ask(question)
+            print("STREAM: fallback ask() ok", flush=True)
+            yield ans
+        except Exception as inner:
+            print("STREAM: fallback ask() failed:", repr(inner), flush=True)
+            yield "RAG failed"
