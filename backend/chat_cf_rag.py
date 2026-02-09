@@ -4,7 +4,8 @@ from typing import Iterable, List, Optional, Any
 from pathlib import Path
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
-from sentence_transformers import SentenceTransformer
+from fastembed import TextEmbedding
+
 from huggingface_hub import InferenceClient
 
 load_dotenv(dotenv_path=Path(__file__).resolve().parents[1] / ".env")
@@ -22,7 +23,6 @@ TEMPERATURE = float(os.getenv("RAG_TEMPERATURE", "0.4"))
 MAX_NEW_TOKENS = int(os.getenv("RAG_MAX_NEW_TOKENS", "800"))
 
 _client: Optional[QdrantClient] = None
-_embedder: Optional[SentenceTransformer] = None
 _hf: Optional[InferenceClient] = None
 
 
@@ -41,7 +41,8 @@ def _init() -> None:
         _client = QdrantClient(url=qurl, api_key=qkey, timeout=60)
 
     if _embedder is None:
-        _embedder = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+        _embedder = TextEmbedding(model_name="BAAI/bge-small-en-v1.5")
+
 
     if _hf is None:
         _require_env("HF_API_KEY", HF_KEY)
@@ -68,7 +69,10 @@ def _retrieve(query: str, top_k: int = TOP_K) -> List[str]:
     assert _embedder is not None
     assert _client is not None
 
-    qvec = _embedder.encode(query, normalize_embeddings=True).tolist()
+    qvec = list(_embedder.embed([query]))[0]
+    qvec = (qvec / (sum(x*x for x in qvec) ** 0.5))  # normalize
+    qvec = qvec.tolist() if hasattr(qvec, "tolist") else list(qvec)
+
     res = _client.query_points(collection_name=COLL, query=qvec, limit=top_k)
 
     chunks: List[str] = []
