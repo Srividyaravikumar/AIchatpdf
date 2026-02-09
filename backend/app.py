@@ -89,7 +89,12 @@ def ask_stream():
         "Connection": "keep-alive",
         "X-Accel-Buffering": "no",
     }
-    return Response(stream_with_context(generate()), headers=headers)
+    return Response(
+    stream_with_context(generate()),
+    headers=headers,
+    direct_passthrough=True
+)
+
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "8000"))
