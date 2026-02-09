@@ -34,7 +34,9 @@ _embedder: Optional[TextEmbedding] = None
 
 def _require_env(name: str, value: Optional[str]) -> str:
     if not value:
+        print(f"ENV MISSING: {name}", flush=True)
         raise RuntimeError(f"Missing required environment variable: {name}")
+    print(f"ENV OK: {name}", flush=True)
     return value
 
 
